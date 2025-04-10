@@ -1,22 +1,32 @@
-import mysql from 'mysql2';
+const mysql = require('mysql2');
 
-// Create MySQL connection pool
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: 'password', // Change this to your actual MySQL password
-    database: 'voteDatabase'
-}).promise();
+// Create a connection to the database
+const connection = mysql.createConnection({
+  host: 'localhost',  // your MySQL host
+  user: 'root',       // your MySQL username
+  password: 'password',  // your MySQL password
+  database: 'votedatabase'   // your database name
+});
 
-// Function to query the database
-async function fetchVotes() {
-    try {
-        const [rows] = await pool.query("SELECT * FROM votes"); // Use pool instead of createPool
-        console.log(rows);
-    } catch (error) {
-        console.error("Error fetching votes:", error);
-    }
-}
+// Connect to the database
+connection.connect(err => {
+  if (err) {
+    console.error('Error connecting: ' + err.stack);
+    return;
+  }
+  console.log('Connected as id ' + connection.threadId);
+});
 
-// Run the function
-fetchVotes();
+// Query to read data from a table
+connection.query('SELECT * FROM votes', (err, rows) => {
+  if (err) {
+    console.error('Error reading from the table: ' + err.stack);
+    return;
+  }
+
+  console.log('Data from table: ', rows);
+});
+
+// Close the connection
+connection.end();
+
