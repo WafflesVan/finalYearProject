@@ -91,8 +91,13 @@ const server = http.createServer((req, res) => {
                         res.end(JSON.stringify({ message: 'Vote submission failed' }));
                     } else {
                         connection.query('UPDATE voters SET has_voted = TRUE WHERE student_id = ?', [studentId]);
+                        // Send both the plaintext and encrypted vote back for Wireshark capture
                         res.writeHead(200, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ message: 'Vote submitted successfully!' }));
+                        res.end(JSON.stringify({
+                            message: 'Vote submitted successfully!',
+                            plaintext_vote: candidate,
+                            encrypted_vote: encryptedVote.encrypted
+                        }));
                     }
                 });
             });
