@@ -1,5 +1,5 @@
 const EC = require('elliptic').ec;
-const ec = new EC('curve25519'); // or 'secp256k1' if preferred
+const ec = new EC('curve25519'); 
 
 // Generate key pair
 const key = ec.genKeyPair();

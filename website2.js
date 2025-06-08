@@ -7,6 +7,9 @@ const mysql = require('mysql2');
 const crypto = require('crypto');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
+const path = require('path');
+
+const ADMIN_PASSWORD = 'admin123';
 
 const port = 3001;
 
@@ -83,6 +86,20 @@ function encryptVote(vote) {
 // Server
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
+
+    // Serve image files (jpg, png)
+    if (req.url.match(/\.(jpg|jpeg|png|gif)$/)) {
+        const filePath = path.join(staticDir, req.url);
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif'
+        }[ext] || 'application/octet-stream';
+
+        return serveStaticFile(req, res, filePath, contentType);
+    }
 
     if (parsedUrl.pathname === '/' && req.method === 'GET') {
         fs.readFile('index.html', (err, data) => {
@@ -185,6 +202,26 @@ const server = http.createServer((req, res) => {
         });
     }
     
+    else if (parsedUrl.pathname === '/adminLogin' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const { adminPassword } = JSON.parse(body);
+          if (adminPassword === ADMIN_PASSWORD) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'ok' }));
+          } else {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'error', message: 'Unauthorized' }));
+          }
+        } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ status: 'error', message: 'Bad Request' }));
+        }
+      });
+    }
+    
     else if (parsedUrl.pathname === '/getVotes' && req.method === 'GET') {
         // For simplicity, no authentication now — add admin auth if you want
         connection.query('SELECT student_id, candidate_encrypted, ephemeral_pubkey, iv FROM votes', (err, results) => {
@@ -220,6 +257,20 @@ const server = http.createServer((req, res) => {
         res.end('404 Not Found');
     }
 });
+
+const staticDir = path.join(__dirname); 
+
+const serveStaticFile = (req, res, filePath, contentType) => {
+    fs.readFile(filePath, (err, content) => {
+        if (err) {
+            res.writeHead(404);
+            res.end('Not found');
+        } else {
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(content);
+        }
+    });
+};
 
 server.listen(port, () => {
     console.log(`Server running on port ${port}`);

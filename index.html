@@ -1,101 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Secure Voting System</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      padding: 40px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #1a73e8;
+    }
+
+    form, .section {
+      background: #fff;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    input[type="submit"], button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s ease-in-out;
+    }
+
+    input[type="submit"]:hover, button:hover {
+      background-color: #0f5bd8;
+    }
+
+    .role-select {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #votesList {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    #votesList li {
+      background: #e9f0fb;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+  </style>
+</head>
 <body>
-    <h1>Voting System</h1>
-  
-    <label>
-      <input type="radio" name="role" value="student" checked> Student
-    </label>
-    <label>
-      <input type="radio" name="role" value="admin"> Admin
-    </label>
-  
-    <div id="loginSection">
-      <form id="loginForm">
-        <label for="studentId">Student ID:</label>
-        <input type="text" id="studentId" required>
-        <input type="submit" value="Submit">
-      </form>
-    </div>
-  
-    <div id="voteSection" style="display:none;">
-      <h2>Vote for Your Candidate</h2>
+
+  <h1>Secure Voting System</h1>
+  <p style="text-align: center; font-size: 14px; color: #666; margin-top: -10px;">By Izhar Syafi</p>
+
+  <div class="role-select">
+    <label><input type="radio" name="role" value="student" checked> Student</label>
+    <label><input type="radio" name="role" value="admin"> Admin</label>
+  </div>
+
+  <div id="adminPasswordDiv" style="display:none; text-align:center; margin-bottom:15px;">
+    <label for="adminPassword">Admin Password:</label>
+    <input type="password" id="adminPassword" />
+  </div>
+
+  <div id="loginSection" class="section">
+    <form id="loginForm">
+      <label for="studentId">Student ID:</label>
+      <input type="text" id="studentId" required>
+      <input type="submit" value="Login">
+    </form>
+  </div>
+
+  <div id="voteSection" class="section" style="display:none;">
+    <h2>Vote for Your Candidate</h2>
       <form id="voteForm">
-        <select id="candidate">
-          <option value="Candidate 1">Candidate 1</option>
-          <option value="Candidate 2">Candidate 2</option>
-        </select>
+        <label style="display: inline-block; text-align: center; margin: 10px;">
+          <input type="radio" name="candidate" value="Candidate 1">
+          <br>
+          <img src="candidate1.jpg" alt="Candidate 1" style="width: 200px; height: 150px; object-fit: cover; border-radius: 10px;"><br>
+          Candidate 1
+        </label>
+
+        <label style="display: inline-block; text-align: center; margin: 10px;">
+          <input type="radio" name="candidate" value="Candidate 2">
+          <br>
+          <img src="candidate2.jpg" alt="Candidate 2" style="width: 200px; height: 150px; object-fit: cover; border-radius: 10px;"><br>
+          Candidate 2
+        </label>
+
+        <br><br>
         <input type="submit" value="Submit Vote">
       </form>
+
+
+  </div>
+
+  <div id="adminSection" class="section" style="display:none;">
+    <h2>Admin Panel</h2>
+    <div class="btn-group">
+      <button id="showAddStudentBtn">Add Student</button>
+      <button id="showResultsBtn">View Results</button>
     </div>
-  
-    <div id="adminVotesSection" style="display:none; margin-top: 20px;">
-      <h2>All Votes (Admin)</h2>
-      <button id="fetchVotesBtn">Get Votes</button>
+
+    <div id="addStudentDiv" style="display:none;">
+      <form id="addStudentForm">
+        <label for="newStudentId">New Student ID:</label>
+        <input type="text" id="newStudentId" required>
+        <input type="submit" value="Add Student">
+      </form>
+    </div>
+
+    <div id="adminVotesSection" style="display:none;">
+      <h3>All Decrypted Votes</h3>
       <ul id="votesList"></ul>
     </div>
-  
-    <script>
-      let currentStudentId = '';
-  
-      document.getElementById('loginForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const studentId = document.getElementById('studentId').value;
-        const role = document.querySelector('input[name="role"]:checked').value;
-  
-        if (role === 'admin') {
-          // Show admin votes section and hide voting section
-          document.getElementById('adminVotesSection').style.display = 'block';
-          document.getElementById('voteSection').style.display = 'none';
-          alert('Logged in as admin. You can now fetch votes.');
-        } else {
-          fetch('http://localhost:3001/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studentId })
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (data.status === 'ok') {
-              currentStudentId = studentId;
-              document.getElementById('voteSection').style.display = 'block';
-              document.getElementById('adminVotesSection').style.display = 'none';
-              alert('Login successful. Please vote.');
-            } else {
-              alert(data.message);
-            }
-          });
-        }
-      });
-  
-      document.getElementById('voteForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const candidate = document.getElementById('candidate').value;
-        fetch('http://localhost:3001/vote', {
+  </div>
+
+  <script>
+    let currentStudentId = '';
+
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const studentId = document.getElementById('studentId').value;
+      const role = document.querySelector('input[name="role"]:checked').value;
+
+      if (role === 'admin') {
+        const adminPassword = document.getElementById('adminPassword').value;
+        fetch('http://localhost:3001/adminLogin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ studentId: currentStudentId, candidate })
+          body: JSON.stringify({ adminPassword })
         })
         .then(res => res.json())
-        .then(data => alert(data.message));
+        .then(data => {
+          if (data.status === 'ok') {
+            document.getElementById('adminSection').style.display = 'block';
+            document.getElementById('voteSection').style.display = 'none';
+            document.getElementById('addStudentDiv').style.display = 'none';
+            document.getElementById('adminVotesSection').style.display = 'none';
+            alert('Admin access granted. Choose an action.');
+          } else {
+            alert('Incorrect admin password.');
+          }
+        });
+      } else {
+        // Existing student login logic
+        fetch('http://localhost:3001/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentId })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'ok') {
+            currentStudentId = studentId;
+            document.getElementById('voteSection').style.display = 'block';
+            document.getElementById('adminSection').style.display = 'none';
+            alert('Login successful. Please vote.');
+          } else {
+            alert(data.message);
+          }
+        });
+      }
+    });
+
+    document.querySelectorAll('input[name="role"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        const isAdmin = document.querySelector('input[name="role"]:checked').value === 'admin';
+        document.getElementById('adminPasswordDiv').style.display = isAdmin ? 'block' : 'none';
       });
-  
-      document.getElementById('fetchVotesBtn').addEventListener('click', function () {
-        fetch('http://localhost:3001/getVotes')
-          .then(res => res.json())
-          .then(data => {
-            const list = document.getElementById('votesList');
-            list.innerHTML = '';
-            data.forEach(vote => {
-              const li = document.createElement('li');
-              if (vote.vote) {
-                li.textContent = `Student ID: ${vote.student_id}, Vote: ${vote.vote}`;
-              } else {
-                li.textContent = `Student ID: ${vote.student_id}, Vote: [Error decrypting]`;
-              }
-              list.appendChild(li);
-            });
-          })
-          .catch(err => alert('Failed to fetch votes'));
-      });
-    </script>
-  </body>
-  
+    });
+
+    document.getElementById('showAddStudentBtn').addEventListener('click', () => {
+      document.getElementById('addStudentDiv').style.display = 'block';
+      document.getElementById('adminVotesSection').style.display = 'none';
+    });
+
+    document.getElementById('showResultsBtn').addEventListener('click', () => {
+      document.getElementById('addStudentDiv').style.display = 'none';
+      document.getElementById('adminVotesSection').style.display = 'block';
+
+      fetch('http://localhost:3001/getVotes')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('votesList');
+          list.innerHTML = '';
+          data.forEach(vote => {
+            const li = document.createElement('li');
+            li.textContent = vote.vote
+              ? `Student ID: ${vote.student_id} → ${vote.vote}`
+              : `Student ID: ${vote.student_id} → [Error decrypting]`;
+            list.appendChild(li);
+          });
+        });
+    });
+
+    document.getElementById('addStudentForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newStudentId = document.getElementById('newStudentId').value;
+      fetch('http://localhost:3001/addStudent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: newStudentId })
+      })
+      .then(res => res.json())
+      .then(data => alert(data.message))
+      .catch(() => alert('Failed to add student'));
+      document.getElementById('newStudentId').value = '';
+    });
+
+    document.getElementById('voteForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const candidate = document.querySelector('input[name="candidate"]:checked').value;
+      fetch('http://localhost:3001/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: currentStudentId, candidate })
+      })
+      .then(res => res.json())
+      .then(data => alert(data.message));
+    });
+  </script>
+
+</body>
+</html>
